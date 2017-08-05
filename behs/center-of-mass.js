@@ -27,13 +27,24 @@ const drawCircle = function(x, y, r) {
   this.ellipse(x, y, r * 2, r * 2);
 };
 
+const displayGrid = function(width, height){
+  for(var x = width/48; x <= width; x += width/48){
+    this.line(x, 0, x, height);
+  }
+  for(var y = width/48; y <= height; y += height/48){
+    this.line(0, y, width, y);
+  }
+}
+
 /** Lifecycle Functions **/
 pb.setup = function(p) {
   this.drawCircle = drawCircle;
+  this.displayGrid = displayGrid;
 };
 
 pb.draw = function(floor, p) {
   this.clear();
+  this.displayGrid(Display.width, Display.height);
   let centerX = 0, centerY = 0, numUsers = 0;
   for (let user of floor.users) {
     centerX += user.x;
