@@ -17,12 +17,13 @@ const pb = new P5Behavior();
 
 const COLORS = {
   RED: [255, 0, 0],
-  GREEN: [0, 255, 0],
+  GREEN: [0, 155, 0],
   BLUE: [0, 0, 255],
   GRAY: [155, 155, 155],
   BLACK: [0, 0, 0],
   YELLOW: [255, 255, 0],
   TEAL: [0,255,255],
+  PURPLE: [155,0,200],
   WHITE: [255,255,255]
 };
 
@@ -64,7 +65,7 @@ const drawShape = function(points, offsetX=0, offsetY=0,color=COLORS.TEAL) {
 
 const drawCenterMassConnectors = function (x1, y1, x2, y2) {
   if(colorscheme){
-    this.drawLine(x1, y1, x2, y2, COLORS.TEAL, MASS_CONNECTORS_STROKE_WEIGHT);
+    this.drawLine(x1, y1, x2, y2, COLORS.PURPLE, MASS_CONNECTORS_STROKE_WEIGHT);
   }else{
     this.drawLine(x1, y1, x2, y2, COLORS.WHITE, MASS_CONNECTORS_STROKE_WEIGHT);
   }
@@ -130,9 +131,10 @@ const rotatePolygon = function(points, centerX, centerY, angle){
   this.rotate(angle);
   if (colorscheme){
     this.drawShape(points,centerX,centerY,COLORS.RED);
-    this.strokeWeight(4);
+    this.strokeWeight(3);
     this.stroke(COLORS.GREEN);
-    this.drawCircle(0, 0, CENTER_RADIUS,COLORS.TEAL);
+    //
+    this.drawCircle(0, 0, CENTER_RADIUS,COLORS.PURPLE);
   }else{
     this.drawShape(points,centerX,centerY,COLORS.GREEN);
     this.drawCircle(0, 0, CENTER_RADIUS,COLORS.WHITE);
@@ -221,7 +223,7 @@ pb.draw = function(floor, p) {
       this.drawCenterMassConnectors(user.x, user.y, centerX, centerY);
     }
     if (colorscheme){
-      this.drawCircle(centerX, centerY, CENTER_RADIUS, COLORS.TEAL);
+      this.drawCircle(centerX, centerY, CENTER_RADIUS, COLORS.PURPLE);
     }else{
       this.drawCircle(centerX, centerY, CENTER_RADIUS, COLORS.WHITE);
     }
