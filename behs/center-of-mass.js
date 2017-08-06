@@ -28,11 +28,6 @@ const GOAL_RADIUS = 10;
 const goalX, goalY = parseInt(Math.random() * Display.width);
 const MASS_CONNECTORS_STROKE_WEIGHT = 4;
 
-// Create constants for hole specs.
-const HOLE_DIAMETER = 20;
-const HOLE_X = parseInt(Math.random() * Display.width);
-const HOLE_Y = parseInt(Math.random() * Display.height);
-
 // Other vars which aren't consts
 var gameOver = 0; // 0: still playing; 1: done playing (rotating)
 
