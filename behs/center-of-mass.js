@@ -31,7 +31,7 @@ const GOAL_RADIUS = 10;
 const MASS_CONNECTORS_STROKE_WEIGHT = 4;
 
 
-const DEBUG = 1;
+const DEBUG = 0;
 
 //colorscheme represents which of the two colorschemes to use
 //1 means red/blue/teal
@@ -240,8 +240,8 @@ pb.draw = function(floor, p) {
   } else {
 
     this.rotatePolygon(finalUserLocations, finalCenterOfMass[0], finalCenterOfMass[1], angle);
-    angle += this.PI/12;
-    if(angle >= 4*this.PI){
+    angle += this.PI/24;
+    if(angle >= 3*this.PI){
       this.gameOver = 0;
       this.updateGoal(p);
       angle = 0;
