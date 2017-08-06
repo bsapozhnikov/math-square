@@ -93,12 +93,11 @@ const distToColor = function(d) {
 };
 
 const rotatePolygon = function(points, centerX, centerY, angle){
-  
   this.translate(centerX, centerY);
   this.angleMode(this.RADIANS);
   this.rotate(angle);
-  this.rect(-50,-50,100,100);
-
+  this.drawShape(points);
+  //this.rect(-50,-50,100,100);
 };
 
 const orderPoints = function(points){
@@ -193,12 +192,7 @@ pb.draw = function(floor, p) {
     })
 
   } else {
-    //this.translate(0,0); //todo: don't think this line is necessary...
-    //TODO: pass in finalUserLocations (into rotatePolygon) instead of null;
-    //      and then edit code in rotatePolygon s.t. it processes array of coords
-    //todomaybe: juuust in case, maybe reset finalUserLocations at the top
-    //of draw (shooouuuuldn't be necessary)
-    this.rotatePolygon(null, this.goalX, this.goalY, angle);
+    this.rotatePolygon(finalUserLocations, this.goalX, this.goalY, angle);
     angle += this.PI/24;
     if(angle >= 2*this.PI){
       this.gameOver = 0;
