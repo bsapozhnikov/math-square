@@ -155,6 +155,7 @@ pb.setup = function(p) {
 };
 
 var angle = 0;
+var finalUserLocations = [];
 pb.draw = function(floor, p) {
   this.clear();
   if(!this.gameOver){
@@ -173,7 +174,8 @@ pb.draw = function(floor, p) {
     }
     centerX /= numUsers;
     centerY /= numUsers;
-    this.drawShape(this.orderPoints(userLocations));
+    var tmpUserLocations = this.orderPoints(userLocations);
+    this.drawShape(tmpUserLocations);
     for (let user of floor.users) {
       this.drawCenterMassConnectors(user.x, user.y, centerX, centerY);
     }
@@ -182,15 +184,20 @@ pb.draw = function(floor, p) {
 
     this.drawGoal();
     var distance = ((centerX-this.goalX)**2 + (centerY-this.goalY)**2)**0.5
-    if ( distance <30)   {
+    if (distance <30)   {
       this.gameOver = true;
+      finalUserLocations = tmpUserLocations;
     }
     users.forEach(user => {
       pb.drawUser(user);
     })
 
   } else {
-    this.translate(0,0);
+    //this.translate(0,0); //todo: don't think this line is necessary...
+    //TODO: pass in finalUserLocations (into rotatePolygon) instead of null;
+    //      and then edit code in rotatePolygon s.t. it processes array of coords
+    //todomaybe: juuust in case, maybe reset finalUserLocations at the top
+    //of draw (shooouuuuldn't be necessary)
     this.rotatePolygon(null, this.goalX, this.goalY, angle);
     angle += this.PI/24;
     if(angle >= 2*this.PI){
