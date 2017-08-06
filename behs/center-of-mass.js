@@ -20,7 +20,8 @@ const COLORS = {
   GREEN: [0, 255, 0],
   BLUE: [0, 0, 255],
   GRAY: [155, 155, 155],
-  BLACK: [0, 0, 0]
+  BLACK: [0, 0, 0],
+  YELLOW: [255, 255, 0]
 };
 
 const CENTER_RADIUS = 20;
@@ -41,6 +42,13 @@ const drawLine = function(x1, y1, x2, y2, strokeColor, strokeWeight) {
   this.stroke(strokeColor);
   this.line(x1, y1, x2, y2);
   this.restoreDefaults();
+};
+
+const drawShape = function(points) {
+  this.fill(COLORS.YELLOW);
+  this.beginShape();
+  points.forEach(point => this.vertex(point.x, point.y));
+  this.endShape(this.CLOSE);
 };
 
 const drawCenterMassConnectors = function (x1, y1, x2, y2) {
