@@ -16,11 +16,21 @@ import * as Display from 'display';
 const pb = new P5Behavior();
 
 const COLORS = {
-  RED: [255, 0, 0]
+  RED: [255, 0, 0],
+  GREEN: [0, 255, 0],
+  BLUE: [0, 0, 255],
+  GRAY: [155, 155, 155],
+  BLACK: [0, 0, 0],
+  YELLOW: [255, 255, 0]
 };
 
 const CENTER_RADIUS = 20;
 const GOAL_RADIUS = 10;
+const goalX, goalY = parseInt(Math.random() * Display.width);
+const MASS_CONNECTORS_STROKE_WEIGHT = 4;
+
+// Other vars which aren't consts
+var gameOver = 0; // 0: still playing; 1: done playing (rotating)
 
 /** Helper Functions **/
 const drawCircle = function(x, y, r, color) {
@@ -30,16 +40,39 @@ const drawCircle = function(x, y, r, color) {
   this.ellipse(x, y, r * 2, r * 2);
 };
 
+const drawLine = function(x1, y1, x2, y2, strokeColor, strokeWeight) {
+  this.strokeWeight(strokeWeight);
+  this.stroke(strokeColor);
+  this.line(x1, y1, x2, y2);
+  this.restoreDefaults();
+};
+
+const drawShape = function(points) {
+  this.fill(COLORS.YELLOW);
+  this.beginShape();
+  points.forEach(point => this.vertex(point.x, point.y));
+  this.endShape(this.CLOSE);
+};
+
+const drawCenterMassConnectors = function (x1, y1, x2, y2) {
+  this.drawLine(x1, y1, x2, y2, COLORS.GREEN, MASS_CONNECTORS_STROKE_WEIGHT);
+};
+
+const restoreDefaults = function() {
+    // Reset defaults for fill/stroke colors.
+    this.strokeWeight(1);
+    this.stroke(COLORS.BLACK);
+};
 
 const drawGoal = function(){
-
   this.drawCircle(this.goalX, this.goalY, GOAL_RADIUS, COLORS.RED);
-}
+};
 
 const updateGoal = function(){
   this.goalX = parseInt(Math.random() * Display.width * (2/3) + (Display.width * (1/6)));
   this.goalY = parseInt(Math.random() * Display.height * (2/3) + (Display.height * (1/6)));
-}
+};
+
 const distToColor = function(d) {
   const corners = [
     [0, 0], 
@@ -56,75 +89,121 @@ const distToColor = function(d) {
   const sat = parseInt(this.abs(ratio - MIDPOINT) * 100);
   const colStr = 'hsb(' + this.hue(ratio > MIDPOINT ? blue : red) + ', ' + sat + '%, 100%)';
   return this.color(colStr);
-  /*
-  const red = this.color(255, 0, 0);
-  const blue = this.color(0, 0, 255);
-  return this.lerpColor(red, blue, d / maxDist);
-  */
-  /*
-  const green = this.color(0, 255, 0);
-  const red = this.color(255, 0, 0);
-  return this.lerpColor(green, red, d / maxDist);
-  */
-  /*
-  this.colorMode(this.HSL);
-  const red = this.color('#f00');
-  const blue = this.color('#00f');
-  const HSLres = this.lerpColor(red, blue, d / maxDist);
-  const RGBres = [this.red(HSLres), this.green(HSLres), this.blue(HSLres)];
-  this.colorMode(this.RGB);
-  return RGBres;
-  */
-}
+};
 
+//PLAY WITH THIS
 const endScreen = function(r) {
   this.clear();
   this.drawCircle(this.goalX, this.goalY, r, this.distToColor(r));
 
 };
 
+const rotatePolygon = function(points, centerX, centerY, angle){
+  
+  this.translate(centerX, centerY);
+  this.angleMode(this.RADIANS);
+  this.rotate(angle);
+  this.rect(-50,-50,100,100);
+
+};
+
+const orderPoints = function(points){
+  const sortedpoints=points.slice().sort((p1, p2) => {
+    if (p1.x != p2.x){
+      p1.x-p2.x;
+    }else{
+      p1.y-p2.y;
+    }
+  });
+
+  function YOnLine(point,leftpoint,rightpoint){
+    fraction = (point.x - leftpoint.x) / (rightpoint.x - leftpoint.x);
+    return leftpoint.y + fraction*(rightpoint.y - leftpoint.y);
+  }
+
+  var answer = new Array(sortedpoints.length);
+
+  answer[0] = sortedpoints[0];
+  answer[sortedpoints.length-1] = sortedpoints[sortedpoints.length-1];
+
+  debugger;
+
+  answerFront = 1;
+  answerBack = sortedpoints.length-1;
+
+  for (var i = 1; i < sortedpoints.length-1; i++) {
+    let lineY = YOnLine(sortedpoints[i],sortedpoints[0],sortedpoints[sortedpoints.length-1]);
+    if (sortedpoints[i].y > lineY) {
+      answer[answerFront] = sortedpoints[i];
+      answerFront++;
+    }else{
+      answer[answerBack] = sortedpoints[i];
+      answerBack--;
+    }
+  }
+  answer[answerFront] = sortedpoints[sortedpoints.length-1];
+  return answer;
+}
 
 /** Lifecycle Functions **/
 pb.setup = function(p) {
+  this.gameOver = 0;
   this.drawCircle = drawCircle;
+  this.drawLine = drawLine;
+  this.drawCenterMassConnectors = drawCenterMassConnectors;
+  this.restoreDefaults = restoreDefaults;
   this.drawGoal = drawGoal;
-  this.drawCircle = drawCircle;
   this.distToColor = distToColor;
+  this.rotatePolygon = rotatePolygon;
   this.updateGoal = updateGoal;
   this.updateGoal();
+  //and here
   this.endScreen = endScreen;
 }
 
 var r = 1;
+var angle = 0;
+
 pb.draw = function(floor, p) {
-  this.endScreen(r);
-  r += 1;
-/*
+  //this.endScreen(r);
+  //r += 1;
+
   this.clear();
-  let centerX = 0, centerY = 0, numUsers = 0;
-  for (let user of floor.users) {
-    centerX += user.x;
-    centerY += user.y;
-    numUsers++;
-    pb.drawUser(user);
+  if(!this.gameOver){
 
-  }
-  centerX /= numUsers;
-  centerY /= numUsers;
-  const distToGoal = this.dist(centerX, centerY, goalX, goalY);
-  this.drawCircle(centerX, centerY, CENTER_RADIUS, this.distToColor(distToGoal));
-  for (let user of floor.users) {
-    this.line(user.x, user.y, centerX, centerY);
-  }
+    let centerX = 0, centerY = 0, numUsers = 0;
 
-  this.drawGoal();
-  var distance = ((centerX-this.goalX)**2 + (centerY-this.goalY)**2)**0.5
-  if ( distance <30)   {
-    this.updateGoal(p);
-  }else{
-    console.log(distance);
+    for (let user of floor.users) {
+      centerX += user.x;
+      centerY += user.y;
+      numUsers++;
+      pb.drawUser(user);
+
+    }
+    centerX /= numUsers;
+    centerY /= numUsers;
+    for (let user of floor.users) {
+      this.drawCenterMassConnectors(user.x, user.y, centerX, centerY);
+    }
+    const distToGoal = this.dist(centerX, centerY, this.goalX, this.goalY);
+    this.drawCircle(centerX, centerY, CENTER_RADIUS, this.distToColor(distToGoal));
+
+    this.drawGoal();
+    var distance = ((centerX-this.goalX)**2 + (centerY-this.goalY)**2)**0.5
+    if (distance <30) {
+      this.gameOver = 1;
+    }
+
+  } else {
+    this.translate(0,0);
+    this.rotatePolygon(null, this.goalX, this.goalY, angle);
+    angle += this.PI/24;
+    if(angle >= 2*this.PI){
+      this.gameOver = 0;
+      this.updateGoal(p);
+      angle = 0;
+    }
   }
-*/
 };
 
 /** Export **/
