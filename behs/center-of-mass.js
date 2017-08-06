@@ -1,7 +1,7 @@
 /* MoMath Math Square Behavior
  *
  *        Title: Center of Mass
- *  Description: Displays center of mass of users
+ *  Description: Users form a polygon and try to place its center of mass (centroid) over the target
  * Scheduler ID: 
  *    Framework: P5
  *       Author: Brian Sapozhnikov <brian.sapozhnikov@gmail.com>,  Lise Ho <lise.ho6@gmail.com>, Shaan Sheikh <shaansweb@gmail.com>, Mary Taft <mary.taft97@gmail.com>
@@ -15,6 +15,8 @@ import * as Display from 'display';
 
 const pb = new P5Behavior();
 
+const DEBUG = true;
+
 const COLORS = {
   RED: [255, 0, 0],
   GREEN: [0, 155, 0],
@@ -27,20 +29,25 @@ const COLORS = {
   WHITE: [255,255,255]
 };
 
+const GAME_STATES = {
+  PLAYING: 0,
+  DONE: 1
+};
+
 const CENTER_RADIUS = 10;
 const GOAL_RADIUS = 10;
+const GOAL_BOUNDS_SIZE_FACTOR = DEBUG ? (1/3) : (2/3);
 const MASS_CONNECTORS_STROKE_WEIGHT = 4;
-
-const DEBUG = 1;
 
 //colorscheme represents which of the two colorschemes to use
 //1 means red/blue/teal
 //0 means green/red/white
 const colorscheme = 0;
 // Other vars which aren't consts
-var gameOver = 0; // 0: still playing; 1: done playing (rotating)
+let p5;
+var gameState = GAME_STATES.PLAYING;
 
-var theme = {}
+var theme = {};
 
 if (colorscheme==0){
   theme = {
@@ -58,65 +65,64 @@ if (colorscheme==0){
   }
 }
 
-
 /** Helper Functions **/
 const drawCircle = function(x, y, r, color) {
   if (color) {
-    this.fill(color);
+    p5.fill(color);
   }
-  this.ellipse(x, y, r * 2, r * 2);
+  p5.ellipse(x, y, r * 2, r * 2);
 };
 
 const drawLine = function(x1, y1, x2, y2, strokeColor, strokeWeight) {
-  this.strokeWeight(strokeWeight);
-  this.stroke(strokeColor);
-  this.line(x1, y1, x2, y2);
-  this.restoreDefaults();
+  p5.strokeWeight(strokeWeight);
+  p5.stroke(strokeColor);
+  p5.line(x1, y1, x2, y2);
+  restoreDefaults();
 };
 
 const drawShape = function(points, offsetX=0, offsetY=0,color) {
-  this.fill(color);
-  this.noStroke();
-  this.beginShape();
-  points.forEach(point => this.vertex(point.x - offsetX, point.y - offsetY));
-  this.endShape(this.CLOSE);
+  p5.fill(color);
+  p5.noStroke();
+  p5.beginShape();
+  points.forEach(point => p5.vertex(point.x - offsetX, point.y - offsetY));
+  p5.endShape(p5.CLOSE);
 };
 
 const drawCenterMassConnectors = function (x1, y1, x2, y2) {
-
-  this.drawLine(x1, y1, x2, y2, theme["centroid_connections"], MASS_CONNECTORS_STROKE_WEIGHT);
-
+  drawLine(x1, y1, x2, y2, theme["centroid_connections"], MASS_CONNECTORS_STROKE_WEIGHT);
 };
 
 const restoreDefaults = function() {
-    // Reset defaults for fill/stroke colors.
-    this.strokeWeight(1);
-    this.stroke(COLORS.BLACK);
+  // Reset defaults for fill/stroke colors.
+  p5.strokeWeight(1);
+  p5.stroke(COLORS.BLACK);
 };
 
 const drawGoal = function(){
-  this.strokeWeight(2);
+  p5.strokeWeight(2);
   // TODO refactors into enums/constants up top.
-  this.stroke(theme["target_stroke"]);
+  p5.stroke(theme["target_stroke"]);
   
   if (theme["target"] == null){
-    this.noFill();
+    p5.noFill();
   }
-  this.drawCircle(this.goalX, this.goalY, GOAL_RADIUS, theme["target"]);
+  drawCircle(this.goalX, this.goalY, GOAL_RADIUS, theme["target"]);
 
 };
 
 const updateGoal = function(){
-  if (DEBUG){
-    this.goalX = parseInt(Math.random() * Display.width * (1/3) + (Display.width * (1/3)));
-    this.goalY = parseInt(Math.random() * Display.height * (1/3) + (Display.height * (1/3)));    
-  }else{
-    this.goalX = parseInt(Math.random() * Display.width * (2/3) + (Display.width * (1/6)));
-    this.goalY = parseInt(Math.random() * Display.height * (2/3) + (Display.height * (1/6)));
-  }
+  const BOUNDING_OFFSET_FACTOR = (1 - GOAL_BOUNDS_SIZE_FACTOR) / 2;
+  const boundingX = Display.width * BOUNDING_OFFSET_FACTOR;
+  const boundingY = Display.height * BOUNDING_OFFSET_FACTOR;
+  const boundingWidth = Display.width * GOAL_BOUNDS_SIZE_FACTOR;
+  const boundingHeight = Display.height * GOAL_BOUNDS_SIZE_FACTOR;
+  this.goalX = parseInt(Math.random() * boundingX + boundingWidth);
+  this.goalY = parseInt(Math.random() * boundingY + boundingHeight);
 };
 
 const distToColor = function(d) {
+    let maxDist, ratio;
+  const MIDPOINT = 0.3;
   if (theme["shade_style"]){
     const corners = [
       [0, 0], 
@@ -124,85 +130,77 @@ const distToColor = function(d) {
       [Display.width, 0],
       [Display.width, Display.height]
     ];
-    const dists = corners.map(point => this.dist(point[0], point[1], this.goalX, this.goalY));
-    const maxDist = this.max(dists);
+    const dists = corners.map(point => p5.dist(point[0], point[1], this.goalX, this.goalY));
+    maxDist = p5.max(dists);
 
-    const MIDPOINT = 0.3;
-    const ratio = d / maxDist;
-    const closecolor = this.color(theme["close_color"][0],theme["close_color"][1],theme["close_color"][2]);
-    const farcolor = this.color(theme["far_color"][0],theme["far_color"][1],theme["far_color"][2]);
+    ratio = d / maxDist;
+    const closecolor = p5.color(theme["close_color"][0],theme["close_color"][1],theme["close_color"][2]);
+    const farcolor = p5.color(theme["far_color"][0],theme["far_color"][1],theme["far_color"][2]);
 
-    const sat = parseInt(this.abs(ratio - MIDPOINT) * 100 / MIDPOINT);
-    const colStr = 'hsb(' + this.hue(ratio > MIDPOINT ? farcolor : closecolor) + ', ' + sat + '%, 100%)';
-    return this.color(colStr);
-  }else{
-    const maxDist = (2**0.5)/4 * Display.width;
-    const MIDPOINT = 0.3;
-    const ratio = d / maxDist;
-    return this.color(ratio*255,(1-ratio)*255,0);
+    const sat = parseInt(p5.abs(ratio - MIDPOINT) * 100 / MIDPOINT);
+    const colStr = 'hsb(' + p5.hue(ratio > MIDPOINT ? farcolor : closecolor) + ', ' + sat + '%, 100%)';
+    return p5.color(colStr);
+  } else {
+    maxDist = (p5.sqrt(2))/4 * Display.width;
+    ratio = d / maxDist;
+    return p5.color(ratio * 255, (1 - ratio) * 255, 0);
   }
 };
 
 const rotatePolygon = function(points, centerX, centerY, angle){
-  this.translate(centerX, centerY);
-  this.angleMode(this.RADIANS);
-  this.rotate(angle);
+  p5.translate(centerX, centerY);
+  p5.angleMode(p5.RADIANS);
+  p5.rotate(angle);
 
-  this.drawShape(points,centerX,centerY,theme["win_shape_color"]);
-  this.strokeWeight(3);
-  this.stroke(theme["win_centroid_stroke"]);
-  //
-  this.drawCircle(0, 0, CENTER_RADIUS,theme["win_centroid_color"]);
+  p5.drawShape(points, centerX, centerY, theme["win_shape_color"]);
+  p5.strokeWeight(3);
+  p5.stroke(theme["win_centroid_stroke"]);
+  drawCircle(0, 0, CENTER_RADIUS, theme["win_centroid_color"]);
 
 };
 
 const orderPoints = function(points){
-  const sortedpoints=points.slice().sort((p1, p2) => {
-    if (p1.x != p2.x){
-      return p1.x-p2.x;
-    }else{
-      return p1.y-p2.y;
+  const sortedpoints = points.slice().sort((p1, p2) => {
+    if (p1.x == p2.x){
+      return p1.y - p2.y;
     }
+    return p1.x - p2.x;
   });
 
   function YOnLine(point,leftpoint,rightpoint){
-    var fraction = (point.x - leftpoint.x) / (rightpoint.x - leftpoint.x);
-    return leftpoint.y + fraction*(rightpoint.y - leftpoint.y);
+    const fraction = (point.x - leftpoint.x) / (rightpoint.x - leftpoint.x);
+    return leftpoint.y + fraction * (rightpoint.y - leftpoint.y);
   }
 
   var answer = new Array(sortedpoints.length);
 
   answer[0] = sortedpoints[0];
-  answer[sortedpoints.length-1] = sortedpoints[sortedpoints.length-1];
-
+  answer[sortedpoints.length - 1] = sortedpoints[sortedpoints.length - 1];
 
   var answerFront = 1;
-  var answerBack = sortedpoints.length-1;
+  var answerBack = sortedpoints.length - 1;
 
-  for (var i = 1; i < sortedpoints.length-1; i++) {
+  for (var i = 1; i < sortedpoints.length - 1; i++) {
     let lineY = YOnLine(sortedpoints[i],sortedpoints[0],sortedpoints[sortedpoints.length-1]);
     if (sortedpoints[i].y > lineY) {
       answer[answerFront] = sortedpoints[i];
       answerFront++;
-    }else{
+    } else {
       answer[answerBack] = sortedpoints[i];
       answerBack--;
     }
   }
-  answer[answerFront] = sortedpoints[sortedpoints.length-1];
+  answer[answerFront] = sortedpoints[sortedpoints.length - 1];
   return answer;
 };
 
 /** Lifecycle Functions **/
 pb.setup = function(p) {
-  this.gameOver = 0;
-  this.drawCircle = drawCircle;
-  this.drawLine = drawLine;
+  p5 = this;
+  this.gameState = GAME_STATES.PLAYING;
   this.drawCenterMassConnectors = drawCenterMassConnectors;
-  this.restoreDefaults = restoreDefaults;
   this.drawGoal = drawGoal;
   this.distToColor = distToColor;
-  this.rotatePolygon = rotatePolygon;
   this.updateGoal = updateGoal;
   this.orderPoints = orderPoints;
   this.drawShape = drawShape;
@@ -214,7 +212,7 @@ var finalUserLocations = [];
 var finalCenterOfMass = [];
 pb.draw = function(floor, p) {
   this.clear();
-  if(!this.gameOver){
+  if(this.gameState == GAME_STATES.PLAYING){
     let centerX = 0, centerY = 0, numUsers = 0;
 
     var userLocations = [];
@@ -238,13 +236,13 @@ pb.draw = function(floor, p) {
       this.drawCenterMassConnectors(user.x, user.y, centerX, centerY);
     }
 
-    this.drawCircle(centerX, centerY, CENTER_RADIUS, theme["centroid"]);
+    drawCircle(centerX, centerY, CENTER_RADIUS, theme["centroid"]);
 
 
     this.drawGoal();
-    var distance = ((centerX-this.goalX)**2 + (centerY-this.goalY)**2)**0.5
-    if (distance < 15)   {
-      this.gameOver = true;
+    const distance = p5.dist(centerX, centerY, this.goalX, this.goalY);
+    if (distance < 15) {
+	this.gameState = GAME_STATES.DONE;
       finalUserLocations = tmpUserLocations;
       finalCenterOfMass = [];
       finalCenterOfMass.push(centerX);
@@ -252,15 +250,18 @@ pb.draw = function(floor, p) {
     }
     users.forEach(user => {
       pb.drawUser(user);
-    })
+    });
 
   } else {
-    this.rotatePolygon(finalUserLocations, finalCenterOfMass[0], finalCenterOfMass[1], angle);
-    angle += this.PI/24;
-    if(angle >= 3*this.PI){
-      this.gameOver = 0;
+    if(angle >= 3*p5.PI){
+      p5.rotate(-1 * angle);
+      p5.translate(-1 * finalCenterOfMass[0], -1 * finalCenterOfMass[1]);
+      this.gameState = GAME_STATES.PLAYING;
       this.updateGoal(p);
       angle = 0;
+    } else {
+      rotatePolygon(finalUserLocations, finalCenterOfMass[0], finalCenterOfMass[1], angle);
+      angle += p5.PI/24;
     }
   }
 
