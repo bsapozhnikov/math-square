@@ -30,8 +30,7 @@ const CENTER_RADIUS = 10;
 const GOAL_RADIUS = 10;
 const MASS_CONNECTORS_STROKE_WEIGHT = 4;
 
-
-const DEBUG = 0;
+const DEBUG = 1;
 
 //colorscheme represents which of the two colorschemes to use
 //1 means red/blue/teal
@@ -57,6 +56,7 @@ const drawLine = function(x1, y1, x2, y2, strokeColor, strokeWeight) {
 
 const drawShape = function(points, offsetX=0, offsetY=0,color=COLORS.TEAL) {
   this.fill(color);
+  this.noStroke();
   this.beginShape();
   points.forEach(point => this.vertex(point.x - offsetX, point.y - offsetY));
   this.endShape(this.CLOSE);
@@ -68,7 +68,6 @@ const drawCenterMassConnectors = function (x1, y1, x2, y2) {
   }else{
     this.drawLine(x1, y1, x2, y2, COLORS.WHITE, MASS_CONNECTORS_STROKE_WEIGHT);
   }
-
 };
 
 const restoreDefaults = function() {
@@ -78,10 +77,14 @@ const restoreDefaults = function() {
 };
 
 const drawGoal = function(){
+  this.strokeWeight(2);
+  // TODO refactors into enums/constants up top.
+  this.stroke(COLORS.GREEN);
   if(colorscheme){
-    this.drawCircle(this.goalX, this.goalY, GOAL_RADIUS, COLORS.TEAL);
+      this.noFill();
+      this.drawCircle(this.goalX, this.goalY, GOAL_RADIUS, null);
   }else{
-    this.drawCircle(this.goalX, this.goalY, GOAL_RADIUS, COLORS.GREEN);
+      this.drawCircle(this.goalX, this.goalY, GOAL_RADIUS, null);
   }
 };
 
@@ -94,7 +97,6 @@ const updateGoal = function(){
     this.goalY = parseInt(Math.random() * Display.height * (2/3) + (Display.height * (1/6)));
   }
 };
-
 
 const distToColor = function(d) {
   if (colorscheme){
@@ -122,17 +124,18 @@ const distToColor = function(d) {
   }
 };
 
-
 const rotatePolygon = function(points, centerX, centerY, angle){
   this.translate(centerX, centerY);
   this.angleMode(this.RADIANS);
   this.rotate(angle);
-  if (!colorscheme){
+  if (colorscheme){
+    this.drawShape(points,centerX,centerY,COLORS.RED);
+    this.strokeWeight(4);
+    this.stroke(COLORS.GREEN);
+    this.drawCircle(0, 0, CENTER_RADIUS,COLORS.TEAL);
+  }else{
     this.drawShape(points,centerX,centerY,COLORS.GREEN);
     this.drawCircle(0, 0, CENTER_RADIUS,COLORS.WHITE);
-  }else{
-    this.drawShape(points,centerX,centerY,COLORS.RED);
-    this.drawCircle(0, 0, CENTER_RADIUS,COLORS.TEAL);  
   }
 };
 
@@ -171,7 +174,7 @@ const orderPoints = function(points){
   }
   answer[answerFront] = sortedpoints[sortedpoints.length-1];
   return answer;
-}
+};
 
 /** Lifecycle Functions **/
 pb.setup = function(p) {
@@ -206,7 +209,6 @@ pb.draw = function(floor, p) {
       centerX += user.x;
       centerY += user.y;
       numUsers++;
-
     }
     centerX /= numUsers;
     centerY /= numUsers;
@@ -238,7 +240,6 @@ pb.draw = function(floor, p) {
     })
 
   } else {
-
     this.rotatePolygon(finalUserLocations, finalCenterOfMass[0], finalCenterOfMass[1], angle);
     angle += this.PI/24;
     if(angle >= 3*this.PI){
@@ -246,7 +247,6 @@ pb.draw = function(floor, p) {
       this.updateGoal(p);
       angle = 0;
     }
-
   }
 
 };
