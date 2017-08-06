@@ -20,7 +20,8 @@ const COLORS = {
   GREEN: [0, 255, 0],
   BLUE: [0, 0, 255],
   GRAY: [155, 155, 155],
-  BLACK: [0, 0, 0]
+  BLACK: [0, 0, 0],
+  YELLOW: [255, 255, 0]
 };
 
 const CENTER_RADIUS = 20;
@@ -44,6 +45,13 @@ const drawLine = function(x1, y1, x2, y2, strokeColor, strokeWeight) {
   this.stroke(strokeColor);
   this.line(x1, y1, x2, y2);
   this.restoreDefaults();
+};
+
+const drawShape = function(points) {
+  this.fill(COLORS.YELLOW);
+  this.beginShape();
+  points.forEach(point => this.vertex(point.x, point.y));
+  this.endShape(this.CLOSE);
 };
 
 const drawCenterMassConnectors = function (x1, y1, x2, y2) {
@@ -92,6 +100,44 @@ const rotatePolygon = function(points, centerX, centerY, angle){
 
 };
 
+const orderPoints = function(points){
+  const sortedpoints=points.slice().sort((p1, p2) => {
+    if (p1.x != p2.x){
+      p1.x-p2.x;
+    }else{
+      p1.y-p2.y;
+    }
+  });
+
+  function YOnLine(point,leftpoint,rightpoint){
+    fraction = (point.x - leftpoint.x) / (rightpoint.x - leftpoint.x);
+    return leftpoint.y + fraction*(rightpoint.y - leftpoint.y);
+  }
+
+  var answer = new Array(sortedpoints.length);
+
+  answer[0] = sortedpoints[0];
+  answer[sortedpoints.length-1] = sortedpoints[sortedpoints.length-1];
+
+  debugger;
+
+  answerFront = 1;
+  answerBack = sortedpoints.length-1;
+
+  for (var i = 1; i < sortedpoints.length-1; i++) {
+    let lineY = YOnLine(sortedpoints[i],sortedpoints[0],sortedpoints[sortedpoints.length-1]);
+    if (sortedpoints[i].y > lineY) {
+      answer[answerFront] = sortedpoints[i];
+      answerFront++;
+    }else{
+      answer[answerBack] = sortedpoints[i];
+      answerBack--;
+    }
+  }
+  answer[answerFront] = sortedpoints[sortedpoints.length-1];
+  return answer;
+}
+
 /** Lifecycle Functions **/
 pb.setup = function(p) {
   this.gameOver = 0;
@@ -133,7 +179,6 @@ pb.draw = function(floor, p) {
     if (distance <30) {
       this.gameOver = 1;
     }
-
 
   } else {
     this.translate(0,0);
