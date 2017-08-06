@@ -79,7 +79,10 @@ const distToColor = function(d) {
 
 const endScreen = function(r) {
   this.clear();
-  this.drawCircle(this.goalX, this.goalY, r, this.distToColor(r));
+  this.stroke(this.distToColor(r));
+  this.strokeWeight(3);
+  //this.distToColor(r));
+  this.drawCircle(this.goalX, this.goalY, r, [0,0,0]);
 
 };
 
@@ -98,7 +101,7 @@ pb.setup = function(p) {
 var r = 1;
 pb.draw = function(floor, p) {
   this.endScreen(r);
-  r += 1;
+  r += 3;
 /*
   this.clear();
   let centerX = 0, centerY = 0, numUsers = 0;
