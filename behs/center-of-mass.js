@@ -93,18 +93,19 @@ const distToColor = function(d) {
 
 //PLAY WITH THIS
 const endScreen = function(r) {
-  this.clear();
-  this.drawCircle(this.goalX, this.goalY, r, this.distToColor(r));
-
+  this.stroke(this.distToColor(r));
+  this.strokeWeight(3);
+  this.drawCircle(0, 0, r, [0,0,0]);
+  //WORKS:
+  //this.drawCircle(0, 0, r, this.distToColor(r));
 };
 
 const rotatePolygon = function(points, centerX, centerY, angle){
-  
+  this.fill(this.distToColor(COLORS.RED));
   this.translate(centerX, centerY);
   this.angleMode(this.RADIANS);
   this.rotate(angle);
   this.rect(-50,-50,100,100);
-
 };
 
 const orderPoints = function(points){
@@ -155,18 +156,15 @@ pb.setup = function(p) {
   this.drawGoal = drawGoal;
   this.distToColor = distToColor;
   this.rotatePolygon = rotatePolygon;
+  this.endScreen = endScreen;
   this.updateGoal = updateGoal;
   this.updateGoal();
-  //and here
-  this.endScreen = endScreen;
 }
 
 var r = 1;
 var angle = 0;
 
 pb.draw = function(floor, p) {
-  //this.endScreen(r);
-  //r += 1;
 
   this.clear();
   if(!this.gameOver){
@@ -195,13 +193,15 @@ pb.draw = function(floor, p) {
     }
 
   } else {
-    this.translate(0,0);
     this.rotatePolygon(null, this.goalX, this.goalY, angle);
     angle += this.PI/24;
+    this.endScreen(r);
+    r += 2;
     if(angle >= 2*this.PI){
       this.gameOver = 0;
       this.updateGoal(p);
       angle = 0;
+      r = 0;
     }
   }
 };
