@@ -23,7 +23,7 @@ const COLORS = {
   BLACK: [0, 0, 0],
   YELLOW: [255, 255, 0],
   TEAL: [0,255,255],
-  PURPLE: [155,0,200],
+  PURPLE: [255,0,255],
   WHITE: [255,255,255]
 };
 
@@ -36,7 +36,7 @@ const DEBUG = 1;
 //colorscheme represents which of the two colorschemes to use
 //1 means red/blue/teal
 //0 means green/red/white
-const colorscheme = 0;
+const colorscheme = 1;
 // Other vars which aren't consts
 var gameOver = 0; // 0: still playing; 1: done playing (rotating)
 
@@ -55,6 +55,20 @@ if (colorscheme==0){
     "win_centroid_stroke":COLORS.RED,
     "win_shape_color":COLORS.RED,
     "shade_style":true //if true, use's brian's shader, if false use direct
+  }
+}else{
+  theme = {
+    "centroid_connections": COLORS.TEAL,
+    "centroid": COLORS.TEAL,
+    "centroid_stroke":null,
+    "target": null,
+    "target_stroke":COLORS.PURPLE,
+    "close_color":COLORS.GREEN,
+    "far_color":COLORS.BLUE,
+    "win_centroid_color":COLORS.TEAL,
+    "win_centroid_stroke":COLORS.PURPLE,
+    "win_shape_color":COLORS.GREEN,
+    "shade_style":false //if true, use's brian's shader, if false use direct
   }
 }
 
@@ -136,10 +150,14 @@ const distToColor = function(d) {
     const colStr = 'hsb(' + this.hue(ratio > MIDPOINT ? farcolor : closecolor) + ', ' + sat + '%, 100%)';
     return this.color(colStr);
   }else{
-    const maxDist = (2**0.5)/4 * Display.width;
+    const maxDist = (2**0.5)/2 * Display.width;
     const MIDPOINT = 0.3;
     const ratio = d / maxDist;
-    return this.color(ratio*255,(1-ratio)*255,0);
+    return this.color(
+        ((theme["far_color"][0]**2)*ratio + (theme["close_color"][0]**2)*(1-ratio))**0.5,
+        ((theme["far_color"][1]**2)*ratio + (theme["close_color"][1]**2)*(1-ratio))**0.5,
+        ((theme["far_color"][2]**2)*ratio + (theme["close_color"][2]**2)*(1-ratio))**0.5,
+      );
   }
 };
 
@@ -244,7 +262,7 @@ pb.draw = function(floor, p) {
 
     this.drawGoal();
     var distance = ((centerX-this.goalX)**2 + (centerY-this.goalY)**2)**0.5
-    if (distance < 15)   {
+    if (distance < 10)   {
       this.gameOver = true;
       finalUserLocations = tmpUserLocations;
       finalCenterOfMass = [];
