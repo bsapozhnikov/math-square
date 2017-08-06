@@ -83,11 +83,11 @@ const distToColor = function(d) {
   ];
   const dists = corners.map(point => this.dist(point[0], point[1], this.goalX, this.goalY));
   const maxDist = this.max(dists);
-  const MIDPOINT = 0.5;
+  const MIDPOINT = 0.3;
   const ratio = d / maxDist;
   const red = this.color(255, 0, 0);
   const blue = this.color(0, 0, 255);
-  const sat = parseInt(this.abs(ratio - MIDPOINT) * 100);
+  const sat = parseInt(this.abs(ratio - MIDPOINT) * 100 / MIDPOINT);
   const colStr = 'hsb(' + this.hue(ratio > MIDPOINT ? blue : red) + ', ' + sat + '%, 100%)';
   return this.color(colStr);
 };
