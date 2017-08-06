@@ -52,7 +52,7 @@ if (colorscheme==0){
     "close_color":COLORS.RED,
     "far_color":COLORS.BLUE,
     "win_centroid_color":COLORS.PURPLE,
-    "win_centroid_stroke":COLORS.GREEN,
+    "win_centroid_stroke":COLORS.RED,
     "win_shape_color":COLORS.RED,
     "shade_style":true //if true, use's brian's shader, if false use direct
   }
@@ -150,6 +150,7 @@ const rotatePolygon = function(points, centerX, centerY, angle){
 
   this.drawShape(points,centerX,centerY,theme["win_shape_color"]);
   this.strokeWeight(3);
+
   this.stroke(theme["win_centroid_stroke"]);
   //
   this.drawCircle(0, 0, CENTER_RADIUS,theme["win_centroid_color"]);
