@@ -25,7 +25,7 @@ const COLORS = {
   BLACK: [0, 0, 0],
   YELLOW: [255, 255, 0],
   TEAL: [0,255,255],
-  PURPLE: [155,0,200],
+  PURPLE: [255,0,255],
   WHITE: [255,255,255]
 };
 
@@ -42,7 +42,7 @@ const MASS_CONNECTORS_STROKE_WEIGHT = 4;
 //colorscheme represents which of the two colorschemes to use
 //1 means red/blue/teal
 //0 means green/red/white
-const colorscheme = 0;
+const colorscheme = 1;
 // Other vars which aren't consts
 let p5;
 var gameState = GAME_STATES.PLAYING;
@@ -59,9 +59,23 @@ if (colorscheme==0){
     "close_color":COLORS.RED,
     "far_color":COLORS.BLUE,
     "win_centroid_color":COLORS.PURPLE,
-    "win_centroid_stroke":COLORS.GREEN,
+    "win_centroid_stroke":COLORS.RED,
     "win_shape_color":COLORS.RED,
     "shade_style":true //if true, use's brian's shader, if false use direct
+  }
+}else{
+  theme = {
+    "centroid_connections": COLORS.TEAL,
+    "centroid": COLORS.TEAL,
+    "centroid_stroke":null,
+    "target": null,
+    "target_stroke":COLORS.PURPLE,
+    "close_color":COLORS.GREEN,
+    "far_color":COLORS.BLUE,
+    "win_centroid_color":COLORS.TEAL,
+    "win_centroid_stroke":COLORS.PURPLE,
+    "win_shape_color":COLORS.GREEN,
+    "shade_style":false //if true, use's brian's shader, if false use direct
   }
 }
 
@@ -141,9 +155,19 @@ const distToColor = function(d) {
     const colStr = 'hsb(' + p5.hue(ratio > MIDPOINT ? farcolor : closecolor) + ', ' + sat + '%, 100%)';
     return p5.color(colStr);
   } else {
-    maxDist = (p5.sqrt(2))/4 * Display.width;
+    maxDist = (p5.sqrt(2))/2 * Display.width;
     ratio = d / maxDist;
-    return p5.color(ratio * 255, (1 - ratio) * 255, 0);
+      return p5.color(
+	  p5.sqrt(
+	      p5.sq(theme["far_color"][0])*ratio + p5.sq(theme["close_color"][0])*(1-ratio)
+	  ),
+	  p5.sqrt(
+	      p5.sq(theme["far_color"][1])*ratio + p5.sq(theme["close_color"][1])*(1-ratio)
+	  ),
+	  p5.sqrt(
+	      p5.sq(theme["far_color"][2])*ratio + p5.sq(theme["close_color"][2])*(1-ratio)
+	  )	 
+    );
   }
 };
 
@@ -241,7 +265,7 @@ pb.draw = function(floor, p) {
 
     this.drawGoal();
     const distance = p5.dist(centerX, centerY, this.goalX, this.goalY);
-    if (distance < 15) {
+    if (distance < 10) {
 	this.gameState = GAME_STATES.DONE;
       finalUserLocations = tmpUserLocations;
       finalCenterOfMass = [];
