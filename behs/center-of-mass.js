@@ -47,7 +47,7 @@ const distToColor = function(d) {
     [Display.width, 0],
     [Display.width, Display.height]
   ];
-  const dists = corners.map(point => this.dist(point[0], point[1], goalX, goalY));
+  const dists = corners.map(point => this.dist(point[0], point[1], this.goalX, this.goalY));
   const maxDist = this.max(dists);
   const MIDPOINT = 0.5;
   const ratio = d / maxDist;
@@ -77,6 +77,12 @@ const distToColor = function(d) {
   */
 }
 
+const endScreen = function(r) {
+  this.clear();
+  this.drawCircle(this.goalX, this.goalY, r, this.distToColor(r));
+
+};
+
 
 /** Lifecycle Functions **/
 pb.setup = function(p) {
@@ -86,9 +92,14 @@ pb.setup = function(p) {
   this.distToColor = distToColor;
   this.updateGoal = updateGoal;
   this.updateGoal();
+  this.endScreen = endScreen;
+}
 
-
+var r = 1;
 pb.draw = function(floor, p) {
+  this.endScreen(r);
+  r += 1;
+/*
   this.clear();
   let centerX = 0, centerY = 0, numUsers = 0;
   for (let user of floor.users) {
@@ -113,7 +124,7 @@ pb.draw = function(floor, p) {
   }else{
     console.log(distance);
   }
-
+*/
 };
 
 /** Export **/
