@@ -186,7 +186,7 @@ pb.draw = function(floor, p) {
     this.drawGoal();
     var distance = ((centerX-this.goalX)**2 + (centerY-this.goalY)**2)**0.5
     if ( distance <30)   {
-      this.updateGoal(p);
+      this.gameOver = true;
     }
     users.forEach(user => {
       pb.drawUser(user);
@@ -213,6 +213,6 @@ export const behavior = {
   init: pb.init.bind(pb),
   frameRate: 'sensors',
   render: pb.render.bind(pb),
-  numGhosts: 4
+  numGhosts: 3
 };
 export default behavior;
