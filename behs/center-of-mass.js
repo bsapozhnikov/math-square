@@ -29,7 +29,13 @@ const COLORS = {
 const CENTER_RADIUS = 10;
 const GOAL_RADIUS = 10;
 const MASS_CONNECTORS_STROKE_WEIGHT = 4;
+
+
 const DEBUG = 1;
+
+//colorscheme represents which of the two colorschemes to use
+//1 means red/blue/teal
+//0 means green/red/white
 const colorscheme = 1;
 // Other vars which aren't consts
 var gameOver = 0; // 0: still playing; 1: done playing (rotating)
