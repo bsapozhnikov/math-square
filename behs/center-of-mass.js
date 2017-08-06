@@ -48,10 +48,10 @@ const drawLine = function(x1, y1, x2, y2, strokeColor, strokeWeight) {
   this.restoreDefaults();
 };
 
-const drawShape = function(points) {
+const drawShape = function(points, offsetX=0, offsetY=0) {
   this.fill(COLORS.TEAL);
   this.beginShape();
-  points.forEach(point => this.vertex(point.x, point.y));
+  points.forEach(point => this.vertex(point.x - offsetX, point.y - offsetY));
   this.endShape(this.CLOSE);
 };
 
@@ -93,12 +93,10 @@ const distToColor = function(d) {
 };
 
 const rotatePolygon = function(points, centerX, centerY, angle){
-  
   this.translate(centerX, centerY);
   this.angleMode(this.RADIANS);
   this.rotate(angle);
-  this.rect(-50,-50,100,100);
-
+  this.drawShape(points, centerX, centerY);
 };
 
 const orderPoints = function(points){
@@ -155,6 +153,7 @@ pb.setup = function(p) {
 };
 
 var angle = 0;
+var finalUserLocations = [];
 pb.draw = function(floor, p) {
   this.clear();
   if(!this.gameOver){
@@ -170,31 +169,29 @@ pb.draw = function(floor, p) {
       centerY += user.y;
       numUsers++;
 
-
     }
     centerX /= numUsers;
     centerY /= numUsers;
-    this.drawShape(this.orderPoints(userLocations));
+    var tmpUserLocations = this.orderPoints(userLocations);
+    this.drawShape(tmpUserLocations);
     for (let user of floor.users) {
       this.drawCenterMassConnectors(user.x, user.y, centerX, centerY);
     }
     const distToGoal = this.dist(centerX, centerY, this.goalX, this.goalY);
     this.drawCircle(centerX, centerY, CENTER_RADIUS, this.distToColor(distToGoal));
 
-
-
     this.drawGoal();
     var distance = ((centerX-this.goalX)**2 + (centerY-this.goalY)**2)**0.5
-    if ( distance <30)   {
+    if (distance <30)   {
       this.gameOver = true;
+      finalUserLocations = tmpUserLocations;
     }
     users.forEach(user => {
       pb.drawUser(user);
     })
 
   } else {
-    this.translate(0,0);
-    this.rotatePolygon(null, this.goalX, this.goalY, angle);
+    this.rotatePolygon(finalUserLocations, this.goalX, this.goalY, angle);
     angle += this.PI/24;
     if(angle >= 2*this.PI){
       this.gameOver = 0;
@@ -203,7 +200,6 @@ pb.draw = function(floor, p) {
     }
 
   }
-
 
 };
 
