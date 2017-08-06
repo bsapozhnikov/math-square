@@ -123,8 +123,8 @@ const updateGoal = function(){
   const boundingY = Display.height * BOUNDING_OFFSET_FACTOR;
   const boundingWidth = Display.width * GOAL_BOUNDS_SIZE_FACTOR;
   const boundingHeight = Display.height * GOAL_BOUNDS_SIZE_FACTOR;
-  goalX = parseInt(Math.random() * boundingX + boundingWidth);
-  goalY = parseInt(Math.random() * boundingY + boundingHeight);
+  goalX = parseInt(Math.random() * boundingWidth + boundingX);
+  goalY = parseInt(Math.random() * boundingHeight + boundingY);
 };
 
 const distToColor = function(d) {
