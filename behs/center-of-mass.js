@@ -51,32 +51,32 @@ var theme = {};
 
 if (colorscheme==0){
   theme = {
-    "centroid_connections": COLORS.PURPLE,
-    "centroid": COLORS.PURPLE,
-    "centroid_stroke":null,
-    "target": null,
-    "target_stroke":COLORS.GREEN,
-    "close_color":COLORS.RED,
-    "far_color":COLORS.BLUE,
-    "win_centroid_color":COLORS.PURPLE,
-    "win_centroid_stroke":COLORS.RED,
-    "win_shape_color":COLORS.RED,
-    "shade_style":true //if true, use's brian's shader, if false use direct
-  }
+    centroid_connections: COLORS.PURPLE,
+    centroid: COLORS.PURPLE,
+    centroid_stroke: null,
+    target: null,
+    target_stroke: COLORS.GREEN,
+    close_color: COLORS.RED,
+    far_color: COLORS.BLUE,
+    win_centroid_color: COLORS.PURPLE,
+    win_centroid_stroke: COLORS.RED,
+    win_shape_color: COLORS.RED,
+    shade_style: true //if true, use's brian's shader, if false use direct
+  };
 }else{
   theme = {
-    "centroid_connections": COLORS.TEAL,
-    "centroid": COLORS.TEAL,
-    "centroid_stroke":null,
-    "target": null,
-    "target_stroke":COLORS.PURPLE,
-    "close_color":COLORS.GREEN,
-    "far_color":COLORS.BLUE,
-    "win_centroid_color":COLORS.TEAL,
-    "win_centroid_stroke":COLORS.PURPLE,
-    "win_shape_color":COLORS.GREEN,
-    "shade_style":false //if true, use's brian's shader, if false use direct
-  }
+    centroid_connections: COLORS.TEAL,
+    centroid: COLORS.TEAL,
+    centroid_stroke: null,
+    target: null,
+    target_stroke: COLORS.PURPLE,
+    close_color: COLORS.GREEN,
+    far_color: COLORS.BLUE,
+    win_centroid_color: COLORS.TEAL,
+    win_centroid_stroke: COLORS.PURPLE,
+    win_shape_color: COLORS.GREEN,
+    shade_style: false //if true, use's brian's shader, if false use direct
+  };
 }
 
 /** Helper Functions **/
@@ -94,7 +94,7 @@ const drawLine = function(x1, y1, x2, y2, strokeColor, strokeWeight) {
   restoreDefaults();
 };
 
-const drawShape = function(points, offsetX=0, offsetY=0,color) {
+const drawShape = function(points, color, offsetX=0, offsetY=0) {
   p5.fill(color);
   p5.noStroke();
   p5.beginShape();
@@ -135,7 +135,7 @@ const updateGoal = function(){
 };
 
 const distToColor = function(d) {
-    let maxDist, ratio;
+  let maxDist, ratio;
   const MIDPOINT = 0.3;
   if (theme["shade_style"]){
     const corners = [
@@ -176,7 +176,7 @@ const rotatePolygon = function(points, centerX, centerY, angle){
   p5.angleMode(p5.RADIANS);
   p5.rotate(angle);
 
-  p5.drawShape(points, centerX, centerY, theme["win_shape_color"]);
+  drawShape(points, theme["win_shape_color"], centerX, centerY);
   p5.strokeWeight(3);
   p5.stroke(theme["win_centroid_stroke"]);
   drawCircle(0, 0, CENTER_RADIUS, theme["win_centroid_color"]);
@@ -221,13 +221,11 @@ const orderPoints = function(points){
 /** Lifecycle Functions **/
 pb.setup = function(p) {
   p5 = this;
-  this.gameState = GAME_STATES.PLAYING;
-  this.drawCenterMassConnectors = drawCenterMassConnectors;
+  gameState = GAME_STATES.PLAYING;
   this.drawGoal = drawGoal;
   this.distToColor = distToColor;
   this.updateGoal = updateGoal;
   this.orderPoints = orderPoints;
-  this.drawShape = drawShape;
   this.updateGoal();
 };
 
@@ -236,7 +234,7 @@ var finalUserLocations = [];
 var finalCenterOfMass = [];
 pb.draw = function(floor, p) {
   this.clear();
-  if(this.gameState == GAME_STATES.PLAYING){
+  if(gameState == GAME_STATES.PLAYING){
     let centerX = 0, centerY = 0, numUsers = 0;
 
     var userLocations = [];
@@ -255,9 +253,9 @@ pb.draw = function(floor, p) {
 
     const distToGoal = this.dist(centerX, centerY, this.goalX, this.goalY);
 
-    this.drawShape(tmpUserLocations,0,0,this.distToColor(distToGoal));
+    drawShape(tmpUserLocations, this.distToColor(distToGoal), 0, 0);
     for (let user of floor.users) {
-      this.drawCenterMassConnectors(user.x, user.y, centerX, centerY);
+      drawCenterMassConnectors(user.x, user.y, centerX, centerY);
     }
 
     drawCircle(centerX, centerY, CENTER_RADIUS, theme["centroid"]);
@@ -266,7 +264,7 @@ pb.draw = function(floor, p) {
     this.drawGoal();
     const distance = p5.dist(centerX, centerY, this.goalX, this.goalY);
     if (distance < 10) {
-	this.gameState = GAME_STATES.DONE;
+      gameState = GAME_STATES.DONE;
       finalUserLocations = tmpUserLocations;
       finalCenterOfMass = [];
       finalCenterOfMass.push(centerX);
@@ -280,7 +278,7 @@ pb.draw = function(floor, p) {
     if(angle >= 3*p5.PI){
       p5.rotate(-1 * angle);
       p5.translate(-1 * finalCenterOfMass[0], -1 * finalCenterOfMass[1]);
-      this.gameState = GAME_STATES.PLAYING;
+      gameState = GAME_STATES.PLAYING;
       this.updateGoal(p);
       angle = 0;
     } else {
