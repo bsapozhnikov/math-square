@@ -142,6 +142,7 @@ pb.draw = function(floor, p) {
     if(angle >= 2*this.PI){
       this.gameOver = 0;
       this.updateGoal(p);
+      this.angle = 0;
     }    
   }
 };
