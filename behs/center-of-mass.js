@@ -88,6 +88,48 @@ const distToColor = function(d) {
   return this.color(colStr);
 };
 
+const orderPoints = function(points){
+
+
+  const sortedpoints=points.slice().sort((p1, p2) => {
+    if (p1.x != p2.x){
+      p1.x-p2.x;
+    }else{
+      p1.y-p2.y;
+    }
+  });
+
+
+
+  function YOnLine(point,leftpoint,rightpoint){
+    fraction = (point.x - leftpoint.x) / (rightpoint.x - leftpoint.x);
+    return leftpoint.y + fraction*(rightpoint.y - leftpoint.y);
+  }
+
+  var answer = new Array(sortedpoints.length);
+
+  answer[0] = sortedpoints[0];
+  answer[sortedpoints.length-1] = sortedpoints[sortedpoints.length-1];
+
+  debugger;
+
+  answerFront = 1;
+  answerBack = sortedpoints.length-1;
+
+  for (var i = 1; i < sortedpoints.length-1; i++) {
+    let lineY = YOnLine(sortedpoints[i],sortedpoints[0],sortedpoints[sortedpoints.length-1]);
+    if (sortedpoints[i].y > lineY) {
+      answer[answerFront] = sortedpoints[i];
+      answerFront++;
+    }else{
+      answer[answerBack] = sortedpoints[i];
+      answerBack--;
+    }
+  }
+  answer[answerFront] = sortedpoints[sortedpoints.length-1];
+  return answer;
+}
+
 /** Lifecycle Functions **/
 pb.setup = function(p) {
   this.drawCircle = drawCircle;
