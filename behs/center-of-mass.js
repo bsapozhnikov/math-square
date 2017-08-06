@@ -21,7 +21,8 @@ const COLORS = {
   BLUE: [0, 0, 255],
   GRAY: [155, 155, 155],
   BLACK: [0, 0, 0],
-  YELLOW: [255, 255, 0]
+  YELLOW: [255, 255, 0],
+  TEAL: [0,255,255]
 };
 
 const CENTER_RADIUS = 20;
@@ -48,14 +49,14 @@ const drawLine = function(x1, y1, x2, y2, strokeColor, strokeWeight) {
 };
 
 const drawShape = function(points) {
-  this.fill(COLORS.YELLOW);
+  this.fill(COLORS.TEAL);
   this.beginShape();
   points.forEach(point => this.vertex(point.x, point.y));
   this.endShape(this.CLOSE);
 };
 
 const drawCenterMassConnectors = function (x1, y1, x2, y2) {
-  this.drawLine(x1, y1, x2, y2, COLORS.GREEN, MASS_CONNECTORS_STROKE_WEIGHT);
+  this.drawLine(x1, y1, x2, y2, COLORS.YELLOW, MASS_CONNECTORS_STROKE_WEIGHT);
 };
 
 const restoreDefaults = function() {
@@ -103,14 +104,14 @@ const rotatePolygon = function(points, centerX, centerY, angle){
 const orderPoints = function(points){
   const sortedpoints=points.slice().sort((p1, p2) => {
     if (p1.x != p2.x){
-      p1.x-p2.x;
+      return p1.x-p2.x;
     }else{
-      p1.y-p2.y;
+      return p1.y-p2.y;
     }
   });
 
   function YOnLine(point,leftpoint,rightpoint){
-    fraction = (point.x - leftpoint.x) / (rightpoint.x - leftpoint.x);
+    var fraction = (point.x - leftpoint.x) / (rightpoint.x - leftpoint.x);
     return leftpoint.y + fraction*(rightpoint.y - leftpoint.y);
   }
 
@@ -119,10 +120,9 @@ const orderPoints = function(points){
   answer[0] = sortedpoints[0];
   answer[sortedpoints.length-1] = sortedpoints[sortedpoints.length-1];
 
-  debugger;
 
-  answerFront = 1;
-  answerBack = sortedpoints.length-1;
+  var answerFront = 1;
+  var answerBack = sortedpoints.length-1;
 
   for (var i = 1; i < sortedpoints.length-1; i++) {
     let lineY = YOnLine(sortedpoints[i],sortedpoints[0],sortedpoints[sortedpoints.length-1]);
@@ -149,6 +149,8 @@ pb.setup = function(p) {
   this.distToColor = distToColor;
   this.rotatePolygon = rotatePolygon;
   this.updateGoal = updateGoal;
+  this.orderPoints = orderPoints;
+  this.drawShape = drawShape;
   this.updateGoal();
 };
 
@@ -156,29 +158,39 @@ var angle = 0;
 pb.draw = function(floor, p) {
   this.clear();
   if(!this.gameOver){
-
     let centerX = 0, centerY = 0, numUsers = 0;
 
+    var userLocations = [];
+    var users = [];
+
     for (let user of floor.users) {
+      userLocations.push({x:user.x,y:user.y});
+      users.push(user);
       centerX += user.x;
       centerY += user.y;
       numUsers++;
-      pb.drawUser(user);
+
 
     }
     centerX /= numUsers;
     centerY /= numUsers;
+    this.drawShape(this.orderPoints(userLocations));
     for (let user of floor.users) {
       this.drawCenterMassConnectors(user.x, user.y, centerX, centerY);
     }
     const distToGoal = this.dist(centerX, centerY, this.goalX, this.goalY);
     this.drawCircle(centerX, centerY, CENTER_RADIUS, this.distToColor(distToGoal));
 
+
+
     this.drawGoal();
     var distance = ((centerX-this.goalX)**2 + (centerY-this.goalY)**2)**0.5
-    if (distance <30) {
-      this.gameOver = 1;
+    if ( distance <30)   {
+      this.updateGoal(p);
     }
+    users.forEach(user => {
+      pb.drawUser(user);
+    })
 
   } else {
     this.translate(0,0);
@@ -189,7 +201,10 @@ pb.draw = function(floor, p) {
       this.updateGoal(p);
       angle = 0;
     }
+
   }
+
+
 };
 
 /** Export **/
@@ -198,6 +213,6 @@ export const behavior = {
   init: pb.init.bind(pb),
   frameRate: 'sensors',
   render: pb.render.bind(pb),
-  numGhosts: 2
+  numGhosts: 4
 };
 export default behavior;
