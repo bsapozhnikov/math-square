@@ -36,9 +36,28 @@ const DEBUG = 1;
 //colorscheme represents which of the two colorschemes to use
 //1 means red/blue/teal
 //0 means green/red/white
-const colorscheme = 1;
+const colorscheme = 0;
 // Other vars which aren't consts
 var gameOver = 0; // 0: still playing; 1: done playing (rotating)
+
+var theme = {}
+
+if (colorscheme==0){
+  theme = {
+    "centroid_connections": COLORS.PURPLE,
+    "centroid": COLORS.PURPLE,
+    "centroid_stroke":null,
+    "target": null,
+    "target_stroke":COLORS.GREEN,
+    "close_color":COLORS.RED,
+    "far_color":COLORS.BLUE,
+    "win_centroid_color":COLORS.PURPLE,
+    "win_centroid_stroke":COLORS.GREEN,
+    "win_shape_color":COLORS.RED,
+    "shade_style":true //if true, use's brian's shader, if false use direct
+  }
+}
+
 
 /** Helper Functions **/
 const drawCircle = function(x, y, r, color) {
@@ -55,7 +74,7 @@ const drawLine = function(x1, y1, x2, y2, strokeColor, strokeWeight) {
   this.restoreDefaults();
 };
 
-const drawShape = function(points, offsetX=0, offsetY=0,color=COLORS.TEAL) {
+const drawShape = function(points, offsetX=0, offsetY=0,color) {
   this.fill(color);
   this.noStroke();
   this.beginShape();
@@ -64,11 +83,9 @@ const drawShape = function(points, offsetX=0, offsetY=0,color=COLORS.TEAL) {
 };
 
 const drawCenterMassConnectors = function (x1, y1, x2, y2) {
-  if(colorscheme){
-    this.drawLine(x1, y1, x2, y2, COLORS.PURPLE, MASS_CONNECTORS_STROKE_WEIGHT);
-  }else{
-    this.drawLine(x1, y1, x2, y2, COLORS.WHITE, MASS_CONNECTORS_STROKE_WEIGHT);
-  }
+
+  this.drawLine(x1, y1, x2, y2, theme["centroid_connections"], MASS_CONNECTORS_STROKE_WEIGHT);
+
 };
 
 const restoreDefaults = function() {
@@ -80,13 +97,13 @@ const restoreDefaults = function() {
 const drawGoal = function(){
   this.strokeWeight(2);
   // TODO refactors into enums/constants up top.
-  this.stroke(COLORS.GREEN);
-  if(colorscheme){
-      this.noFill();
-      this.drawCircle(this.goalX, this.goalY, GOAL_RADIUS, null);
-  }else{
-      this.drawCircle(this.goalX, this.goalY, GOAL_RADIUS, null);
+  this.stroke(theme["target_stroke"]);
+  
+  if (theme["target"] == null){
+    this.noFill();
   }
+  this.drawCircle(this.goalX, this.goalY, GOAL_RADIUS, theme["target"]);
+
 };
 
 const updateGoal = function(){
@@ -100,7 +117,7 @@ const updateGoal = function(){
 };
 
 const distToColor = function(d) {
-  if (colorscheme){
+  if (theme["shade_style"]){
     const corners = [
       [0, 0], 
       [0, Display.height],
@@ -112,10 +129,11 @@ const distToColor = function(d) {
 
     const MIDPOINT = 0.3;
     const ratio = d / maxDist;
-    const red = this.color(255, 0, 0);
-    const blue = this.color(0, 0, 255);
+    const closecolor = this.color(theme["close_color"][0],theme["close_color"][1],theme["close_color"][2]);
+    const farcolor = this.color(theme["far_color"][0],theme["far_color"][1],theme["far_color"][2]);
+
     const sat = parseInt(this.abs(ratio - MIDPOINT) * 100 / MIDPOINT);
-    const colStr = 'hsb(' + this.hue(ratio > MIDPOINT ? blue : red) + ', ' + sat + '%, 100%)';
+    const colStr = 'hsb(' + this.hue(ratio > MIDPOINT ? farcolor : closecolor) + ', ' + sat + '%, 100%)';
     return this.color(colStr);
   }else{
     const maxDist = (2**0.5)/4 * Display.width;
@@ -129,16 +147,13 @@ const rotatePolygon = function(points, centerX, centerY, angle){
   this.translate(centerX, centerY);
   this.angleMode(this.RADIANS);
   this.rotate(angle);
-  if (colorscheme){
-    this.drawShape(points,centerX,centerY,COLORS.RED);
-    this.strokeWeight(3);
-    this.stroke(COLORS.GREEN);
-    //
-    this.drawCircle(0, 0, CENTER_RADIUS,COLORS.PURPLE);
-  }else{
-    this.drawShape(points,centerX,centerY,COLORS.GREEN);
-    this.drawCircle(0, 0, CENTER_RADIUS,COLORS.WHITE);
-  }
+
+  this.drawShape(points,centerX,centerY,theme["win_shape_color"]);
+  this.strokeWeight(3);
+  this.stroke(theme["win_centroid_stroke"]);
+  //
+  this.drawCircle(0, 0, CENTER_RADIUS,theme["win_centroid_color"]);
+
 };
 
 const orderPoints = function(points){
@@ -222,15 +237,13 @@ pb.draw = function(floor, p) {
     for (let user of floor.users) {
       this.drawCenterMassConnectors(user.x, user.y, centerX, centerY);
     }
-    if (colorscheme){
-      this.drawCircle(centerX, centerY, CENTER_RADIUS, COLORS.PURPLE);
-    }else{
-      this.drawCircle(centerX, centerY, CENTER_RADIUS, COLORS.WHITE);
-    }
+
+    this.drawCircle(centerX, centerY, CENTER_RADIUS, theme["centroid"]);
+
 
     this.drawGoal();
     var distance = ((centerX-this.goalX)**2 + (centerY-this.goalY)**2)**0.5
-    if (distance < 20)   {
+    if (distance < 15)   {
       this.gameOver = true;
       finalUserLocations = tmpUserLocations;
       finalCenterOfMass = [];
