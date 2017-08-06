@@ -48,10 +48,10 @@ const drawLine = function(x1, y1, x2, y2, strokeColor, strokeWeight) {
   this.restoreDefaults();
 };
 
-const drawShape = function(points) {
+const drawShape = function(points, offsetX=0, offsetY=0) {
   this.fill(COLORS.TEAL);
   this.beginShape();
-  points.forEach(point => this.vertex(point.x, point.y));
+  points.forEach(point => this.vertex(point.x - offsetX, point.y - offsetY));
   this.endShape(this.CLOSE);
 };
 
@@ -96,8 +96,7 @@ const rotatePolygon = function(points, centerX, centerY, angle){
   this.translate(centerX, centerY);
   this.angleMode(this.RADIANS);
   this.rotate(angle);
-  this.drawShape(points);
-  //this.rect(-50,-50,100,100);
+  this.drawShape(points, centerX, centerY);
 };
 
 const orderPoints = function(points){
